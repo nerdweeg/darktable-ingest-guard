@@ -1,0 +1,10 @@
+# darktable-ingest-guard dependencies
+#
+# Both packages are optional — the script will still run without them,
+# but will fall back to file modification time for date extraction.
+
+# EXIF metadata extraction from photos (JPEG, HEIC, TIFF, RAW preview …)
+Pillow>=10.0.0
+
+# Video container metadata extraction (MOV, MP4, …)
+hachoir>=3.2.0
