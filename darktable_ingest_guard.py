@@ -5,8 +5,8 @@ darktable-ingest-guard: Ingest guard and importer for the darktable workflow.
 Two operating modes
 -------------------
 Guard mode (default)
-    Verifies every file in a source folder (e.g. Image Capture temp folder)
-    has been properly handled by darktable:
+    Verifies every file in a source folder (e.g. the temporary import folder
+    used by your camera transfer tool) has been properly handled by darktable:
       - If the file's hash is found in the destination (darktable archive):
         the source copy is deleted.
       - If the file's hash is NOT found in the destination:
@@ -22,19 +22,28 @@ CLI-import mode  (enabled with --darktable-cli)
 
 In both modes the source folder should be empty after a successful run.
 
+Finding darktable-cli
+---------------------
+The path to darktable-cli differs by platform:
+  Linux   : darktable-cli  (if on PATH)  or  /usr/bin/darktable-cli
+  macOS   : /Applications/darktable.app/Contents/MacOS/darktable-cli
+            or  /opt/homebrew/bin/darktable-cli  (Homebrew install)
+  Windows : C:\\Program Files\\darktable\\bin\\darktable-cli.exe
+
 Usage:
     # Guard mode — verify darktable GUI already imported everything
-    python darktable_ingest_guard.py --source /tmp/import --dest ~/Pictures/darktable
-
-    # CLI-import mode — let the tool run darktable-cli itself
     python darktable_ingest_guard.py \\
-        --source /tmp/import --dest ~/Pictures/darktable \\
-        --darktable-cli /usr/bin/darktable-cli
+        --source /path/to/import-temp --dest /path/to/darktable-archive
+
+    # CLI-import mode — let the tool run darktable-cli itself (Linux example)
+    python darktable_ingest_guard.py \\
+        --source /path/to/import-temp --dest /path/to/darktable-archive \\
+        --darktable-cli darktable-cli
 
     # Dry-run preview of CLI-import mode
     python darktable_ingest_guard.py \\
-        --source /tmp/import --dest ~/Pictures/darktable \\
-        --darktable-cli /usr/bin/darktable-cli --dry-run
+        --source /path/to/import-temp --dest /path/to/darktable-archive \\
+        --darktable-cli darktable-cli --dry-run
 """
 
 import argparse
@@ -643,7 +652,7 @@ def parse_args(argv: Optional[list[str]] = None) -> argparse.Namespace:
         "--source", "-s",
         required=True,
         type=Path,
-        help="Source folder (e.g. Image Capture temp folder).",
+        help="Source folder (temp folder used by your camera transfer tool).",
     )
     parser.add_argument(
         "--dest", "-d",
@@ -672,7 +681,12 @@ def parse_args(argv: Optional[list[str]] = None) -> argparse.Namespace:
             "Path to the darktable-cli executable.  When provided the tool "
             "switches to CLI-import mode: photos are processed by darktable-cli "
             "and videos are copied directly.  When omitted the tool runs in "
-            "guard mode (hash-based verification of a darktable GUI import)."
+            "guard mode (hash-based verification of a darktable GUI import).  "
+            "Typical locations: Linux: 'darktable-cli' (if on PATH) or "
+            "'/usr/bin/darktable-cli'; macOS: "
+            "'/Applications/darktable.app/Contents/MacOS/darktable-cli' or "
+            "'/opt/homebrew/bin/darktable-cli'; Windows: "
+            "'C:\\\\Program Files\\\\darktable\\\\bin\\\\darktable-cli.exe'."
         ),
     )
     parser.add_argument(
