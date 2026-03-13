@@ -17,7 +17,7 @@ import darktable_ingest_guard as dig
 # Fixtures
 # ---------------------------------------------------------------------------
 
-@pytest.fixture()
+@pytest.fixture
 def tmp_source(tmp_path: Path) -> Path:
     """Return an empty source directory."""
     src = tmp_path / "source"
@@ -25,7 +25,7 @@ def tmp_source(tmp_path: Path) -> Path:
     return src
 
 
-@pytest.fixture()
+@pytest.fixture
 def tmp_dest(tmp_path: Path) -> Path:
     """Return an empty destination directory."""
     dst = tmp_path / "dest"
@@ -33,7 +33,7 @@ def tmp_dest(tmp_path: Path) -> Path:
     return dst
 
 
-@pytest.fixture()
+@pytest.fixture
 def logger() -> logging.Logger:
     """Return a silent logger."""
     log = logging.getLogger("test_ingest_guard")

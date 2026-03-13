@@ -95,7 +95,7 @@ def setup_logging(log_dir: Path) -> logging.Logger:
     log_dir.mkdir(parents=True, exist_ok=True)
 
     # ISO 8601 timestamp with ms precision, filesystem-safe (: → -)
-    ts = datetime.now().strftime("%Y-%m-%dT%H-%M-%S.%f")[:-3]  # trim to ms
+    ts = datetime.now().strftime("%Y-%m-%dT%H-%M-%S.%f")[:-3]  # trim microseconds to milliseconds
     log_file = log_dir / f"{ts}_ingest_guard.log"
 
     logger = logging.getLogger("ingest_guard")
