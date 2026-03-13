@@ -1,6 +1,6 @@
 # darktable-ingest-guard
 
-A robust command-line tool for the **iPhone → darktable** ingest workflow.
+A robust command-line tool for the **camera / phone → darktable** ingest workflow.
 It operates in two modes:
 
 * **Guard mode** — verifies that the darktable GUI has already imported
@@ -15,40 +15,40 @@ It operates in two modes:
 ### Guard mode (default)
 
 ```
-iPhone
-  │
-  │  Image Capture
-  ▼
-~/Pictures/ImageCapture_import/   ← SOURCE (temp folder)
-  │
-  │  darktable GUI imports photos → ~/Pictures/darktable/yyyy/mm/
-  │
-  └─ darktable-ingest-guard ──────────────────────────────────────
-        For every file in SOURCE:
-          • Hash found in DEST?  → delete source copy  (already imported)
-          • Hash NOT found?      → copy to DEST/yyyy/mm/ (video or missed photo)
-        Result: SOURCE folder is empty
+Camera / phone
+   │
+   │  Transfer tool (e.g. gphoto2, Image Capture, Windows Photo Import)
+   ▼
+/path/to/import-temp/          ← SOURCE (temp folder)
+   │
+   │  darktable GUI imports photos → /path/to/darktable-archive/yyyy/mm/
+   │
+   └─ darktable-ingest-guard ──────────────────────────────────────
+         For every file in SOURCE:
+           • Hash found in DEST?  → delete source copy  (already imported)
+           • Hash NOT found?      → copy to DEST/yyyy/mm/ (video or missed photo)
+         Result: SOURCE folder is empty
 ```
 
 ### CLI-import mode (`--darktable-cli`)
 
 ```
-iPhone
-  │
-  │  Image Capture
-  ▼
-~/Pictures/ImageCapture_import/   ← SOURCE (temp folder)
-  │
-  └─ darktable-ingest-guard --darktable-cli /usr/bin/darktable-cli ─────
-        For every file in SOURCE:
-          • Photo (darktable supports it):
-              – Already imported? (stem match in DEST/yyyy/mm/)  → skip
-              – Not yet imported?  → run darktable-cli, verify output,
-                                     delete source
-          • Video (darktable-cli cannot process it):
-              – Hash found in DEST?  → delete source copy
-              – Hash NOT found?      → copy to DEST/yyyy/mm/, delete source
-        Result: SOURCE folder is empty
+Camera / phone
+   │
+   │  Transfer tool (e.g. gphoto2, Image Capture, Windows Photo Import)
+   ▼
+/path/to/import-temp/          ← SOURCE (temp folder)
+   │
+   └─ darktable-ingest-guard --darktable-cli <path-to-darktable-cli> ─────
+         For every file in SOURCE:
+           • Photo (darktable supports it):
+               – Already imported? (stem match in DEST/yyyy/mm/)  → skip
+               – Not yet imported?  → run darktable-cli, verify output,
+                                      delete source
+           • Video (darktable-cli cannot process it):
+               – Hash found in DEST?  → delete source copy
+               – Hash NOT found?      → copy to DEST/yyyy/mm/, delete source
+         Result: SOURCE folder is empty
 ```
 
 > **Note:** darktable-cli does not process video files.  Videos are always
@@ -73,6 +73,21 @@ folder placement:
 
 ---
 
+## Finding darktable-cli
+
+The path to `darktable-cli` differs by platform:
+
+| Platform | Typical location |
+|----------|-----------------|
+| Linux    | `darktable-cli` (if on `$PATH`) or `/usr/bin/darktable-cli` |
+| macOS    | `/Applications/darktable.app/Contents/MacOS/darktable-cli` or `/opt/homebrew/bin/darktable-cli` (Homebrew) |
+| Windows  | `C:\Program Files\darktable\bin\darktable-cli.exe` |
+
+You can verify the location with `which darktable-cli` (Linux/macOS) or
+`where darktable-cli` (Windows).
+
+---
+
 ## Usage
 
 ```
@@ -83,7 +98,7 @@ python darktable_ingest_guard.py --source <SOURCE_DIR> --dest <DEST_DIR> [option
 
 | Flag | Short | Default | Description |
 |------|-------|---------|-------------|
-| `--source` | `-s` | *(required)* | Source folder (Image Capture temp folder) |
+| `--source` | `-s` | *(required)* | Source folder (temp folder used by your camera transfer tool) |
 | `--dest` | `-d` | *(required)* | Destination folder (darktable archive root) |
 | `--log-dir` | `-l` | `./logs` | Directory for log files |
 | `--dry-run` | `-n` | off | Simulate — print what would happen without changing any files |
@@ -96,34 +111,46 @@ python darktable_ingest_guard.py --source <SOURCE_DIR> --dest <DEST_DIR> [option
 ```bash
 # Guard mode — verify darktable GUI already imported everything
 python darktable_ingest_guard.py \
-    --source ~/Pictures/ImageCapture_import \
-    --dest   ~/Pictures/darktable
+    --source ~/import-temp \
+    --dest   ~/darktable-archive
 
-# CLI-import mode — let the tool drive darktable-cli itself
+# CLI-import mode — Linux / macOS (darktable-cli on PATH)
 python darktable_ingest_guard.py \
-    --source ~/Pictures/ImageCapture_import \
-    --dest   ~/Pictures/darktable \
-    --darktable-cli /usr/bin/darktable-cli
+    --source ~/import-temp \
+    --dest   ~/darktable-archive \
+    --darktable-cli darktable-cli
+
+# CLI-import mode — macOS (app bundle)
+python darktable_ingest_guard.py \
+    --source ~/import-temp \
+    --dest   ~/darktable-archive \
+    --darktable-cli /Applications/darktable.app/Contents/MacOS/darktable-cli
+
+# CLI-import mode — Windows (PowerShell or CMD)
+python darktable_ingest_guard.py `
+    --source $env:USERPROFILE\import-temp `
+    --dest   $env:USERPROFILE\darktable-archive `
+    --darktable-cli "C:\Program Files\darktable\bin\darktable-cli.exe"
 
 # CLI-import mode with a specific export style and format
 python darktable_ingest_guard.py \
-    --source ~/Pictures/ImageCapture_import \
-    --dest   ~/Pictures/darktable \
-    --darktable-cli /usr/bin/darktable-cli \
+    --source ~/import-temp \
+    --dest   ~/darktable-archive \
+    --darktable-cli darktable-cli \
     --darktable-cli-args --style my_style --out-ext tif
 
 # Dry-run preview (works with both modes)
 python darktable_ingest_guard.py \
-    --source ~/Pictures/ImageCapture_import \
-    --dest   ~/Pictures/darktable \
-    --darktable-cli /usr/bin/darktable-cli \
+    --source ~/import-temp \
+    --dest   ~/darktable-archive \
+    --darktable-cli darktable-cli \
     --dry-run
 
 # Custom log directory
 python darktable_ingest_guard.py \
-    --source ~/Pictures/ImageCapture_import \
-    --dest   ~/Pictures/darktable \
-    --log-dir ~/Library/Logs/ingest-guard
+    --source ~/import-temp \
+    --dest   ~/darktable-archive \
+    --log-dir ~/logs/ingest-guard
 ```
 
 ---
