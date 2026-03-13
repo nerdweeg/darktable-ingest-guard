@@ -155,21 +155,29 @@ python darktable_ingest_guard.py \
 
 ---
 
-## Personal wrapper script
+## Personal wrapper scripts
 
-Copy the included template and fill in your paths:
+Wrapper scripts now live in `scripts/`.
+
+`scripts/run_defaults.sh` is the tracked template.
+Create one local wrapper per mode so you can test both workflows with the same
+folders:
 
 ```bash
-cp run_defaults.sh my_run.sh   # or just edit run_defaults.sh locally
-chmod +x my_run.sh
+cp scripts/run_defaults.sh scripts/run_guard_local.sh
+cp scripts/run_defaults.sh scripts/run_cli_local.sh
+chmod +x scripts/run_guard_local.sh scripts/run_cli_local.sh
 ```
 
-`run_defaults.sh` is **git-ignored** — your local paths are never committed.
+The local wrappers are **git-ignored** so you can keep your own paths there.
+They can each point at multiple source folders if needed.
 
 ```bash
-# After editing SOURCE_DIR, DEST_DIR (and optionally DARKTABLE_CLI) in run_defaults.sh:
-bash run_defaults.sh           # normal run
-bash run_defaults.sh --dry-run # dry-run preview
+./scripts/run_guard_local.sh      # guard mode
+./scripts/run_guard_local.sh --dry-run
+
+./scripts/run_cli_local.sh        # CLI-import mode
+./scripts/run_cli_local.sh --dry-run
 ```
 
 ---
