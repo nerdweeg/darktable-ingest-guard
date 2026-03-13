@@ -1,3 +1,13 @@
+# darktable-ingest-guard — project-specific ignores
+# -----------------------------------------------------------------------
+
+# Personal wrapper script with local paths (copy of run_defaults.sh)
+run_defaults.sh
+
+# Log output directory
+logs/
+
+# -----------------------------------------------------------------------
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[codz]
