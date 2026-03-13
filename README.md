@@ -1,0 +1,1 @@
+# darktable-ingest-guard
