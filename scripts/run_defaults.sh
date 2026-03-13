@@ -1,6 +1,6 @@
-#!/usr/bin/env bash
+#!/usr/bin/env zsh
 
-PROJECT_ROOT="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd)"
+PROJECT_ROOT="${0:A:h:h}"
 
 SOURCE_DIRS=(
   "$HOME/Pictures/Import-Temp-Folder"

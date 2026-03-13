@@ -158,12 +158,13 @@ python darktable_ingest_guard.py \
 ## Personal wrapper scripts
 
 Wrapper scripts now live in `scripts/`.
+They are written for `zsh` on macOS, which matches the default shell setup.
 
 `scripts/run_defaults.sh` is the tracked template.
 Create one local wrapper per mode so you can test both workflows with the same
 folders:
 
-```bash
+```zsh
 cp scripts/run_defaults.sh scripts/run_guard_local.sh
 cp scripts/run_defaults.sh scripts/run_cli_local.sh
 chmod +x scripts/run_guard_local.sh scripts/run_cli_local.sh
@@ -172,7 +173,7 @@ chmod +x scripts/run_guard_local.sh scripts/run_cli_local.sh
 The local wrappers are **git-ignored** so you can keep your own paths there.
 They can each point at multiple source folders if needed.
 
-```bash
+```zsh
 ./scripts/run_guard_local.sh      # guard mode
 ./scripts/run_guard_local.sh --dry-run
 

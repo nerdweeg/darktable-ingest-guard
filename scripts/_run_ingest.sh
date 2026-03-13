@@ -1,18 +1,18 @@
-#!/usr/bin/env bash
+#!/usr/bin/env zsh
 set -euo pipefail
 
-SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
+SCRIPT_DIR="${0:A:h}"
 PROJECT_ROOT="${PROJECT_ROOT:-$(cd -- "$SCRIPT_DIR/.." && pwd)}"
 PYTHON_BIN="${PYTHON_BIN:-python3}"
 LOG_DIR="${LOG_DIR:-$PROJECT_ROOT/logs}"
 MODE="${MODE:-cli}"
 
-if [[ ${SOURCE_DIRS+x} != x ]]; then
-  declare -a SOURCE_DIRS=()
+if [[ -z "${SOURCE_DIRS+x}" ]]; then
+  typeset -a SOURCE_DIRS=()
 fi
 
-if [[ ${DARKTABLE_CLI_ARGS+x} != x ]]; then
-  declare -a DARKTABLE_CLI_ARGS=()
+if [[ -z "${DARKTABLE_CLI_ARGS+x}" ]]; then
+  typeset -a DARKTABLE_CLI_ARGS=()
 fi
 
 if [[ $# -gt 0 ]]; then
@@ -29,12 +29,12 @@ if [[ $# -gt 0 ]]; then
 fi
 
 if [[ ${#SOURCE_DIRS[@]} -eq 0 ]]; then
-  printf 'No SOURCE_DIRS configured in %s.\n' "${BASH_SOURCE[1]:-$0}" >&2
+  printf 'No SOURCE_DIRS configured in %s.\n' "$0" >&2
   exit 1
 fi
 
 if [[ -z "${DEST_DIR:-}" ]]; then
-  printf 'DEST_DIR is not configured in %s.\n' "${BASH_SOURCE[1]:-$0}" >&2
+  printf 'DEST_DIR is not configured in %s.\n' "$0" >&2
   exit 1
 fi
 
