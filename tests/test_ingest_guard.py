@@ -146,6 +146,54 @@ class TestRunDarktableCli:
 
 
 # ---------------------------------------------------------------------------
+# darktable process detection / prompting
+# ---------------------------------------------------------------------------
+
+class TestDarktableProcessChecks:
+    def test_detects_running_darktable_on_posix(self):
+        result = MagicMock(
+            stdout="/Applications/darktable.app/Contents/MacOS/darktable\n",
+            stderr="",
+        )
+        with patch("subprocess.run", return_value=result):
+            assert dig.is_darktable_running() is True
+
+    def test_ignores_darktable_cli_process(self):
+        result = MagicMock(stdout="/usr/bin/darktable-cli\n", stderr="")
+        with patch("subprocess.run", return_value=result):
+            assert dig.is_darktable_running() is False
+
+    def test_prompt_returns_immediately_when_darktable_not_running(self, logger):
+        with (
+            patch("darktable_ingest_guard.is_darktable_running", return_value=False),
+            patch("builtins.input") as mock_input,
+        ):
+            dig.prompt_to_close_darktable(logger)
+        mock_input.assert_not_called()
+
+    def test_prompt_rechecks_until_darktable_is_closed(self, logger):
+        with (
+            patch(
+                "darktable_ingest_guard.is_darktable_running",
+                side_effect=[True, False],
+            ),
+            patch("sys.stdin.isatty", return_value=True),
+            patch("builtins.input", return_value="") as mock_input,
+        ):
+            dig.prompt_to_close_darktable(logger)
+        mock_input.assert_called_once()
+
+    def test_prompt_aborts_when_user_quits(self, logger):
+        with (
+            patch("darktable_ingest_guard.is_darktable_running", return_value=True),
+            patch("sys.stdin.isatty", return_value=True),
+            patch("builtins.input", return_value="q"),
+        ):
+            with pytest.raises(SystemExit):
+                dig.prompt_to_close_darktable(logger)
+
+
+# ---------------------------------------------------------------------------
 # build_dest_hash_index
 # ---------------------------------------------------------------------------
 
@@ -272,10 +320,12 @@ class TestIngestGuardCliImportPhotos:
         guard = self._make_cli_guard(tmp_source, tmp_dest, logger)
         with (
             patch.object(guard, "_dest_folder_for", return_value=dest_folder),
+            patch("darktable_ingest_guard.prompt_to_close_darktable") as mock_prompt,
             patch("darktable_ingest_guard.run_darktable_cli", side_effect=fake_cli),
         ):
             guard.run()
 
+        mock_prompt.assert_called_once_with(logger)
         assert not src_file.exists(), "Source should be deleted after import"
         assert guard.stats[".cr2"]["imported"] == 1
         assert guard.stats[".cr2"]["error"] == 0
@@ -371,10 +421,12 @@ class TestIngestGuardCliImportPhotos:
         guard = self._make_cli_guard(tmp_source, tmp_dest, logger, dry_run=True)
         with (
             patch.object(guard, "_dest_folder_for", return_value=dest_folder),
+            patch("darktable_ingest_guard.prompt_to_close_darktable") as mock_prompt,
             patch("darktable_ingest_guard.run_darktable_cli") as mock_cli,
         ):
             guard.run()
 
+        mock_prompt.assert_not_called()
         mock_cli.assert_not_called()
         assert src_file.exists(), "Source must not be modified in dry-run"
 

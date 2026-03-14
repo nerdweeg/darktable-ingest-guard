@@ -291,6 +291,67 @@ def run_darktable_cli(
     return subprocess.run(cmd, capture_output=True, text=True)  # noqa: S603
 
 
+def is_darktable_running() -> bool:
+    """Return True if the darktable GUI process appears to be running."""
+    try:
+        if sys.platform == "win32":
+            result = subprocess.run(  # noqa: S603
+                ["tasklist"],
+                capture_output=True,
+                text=True,
+            )
+            process_lines = result.stdout.lower().splitlines()
+            return any("darktable.exe" in line for line in process_lines)
+
+        result = subprocess.run(  # noqa: S603
+            ["ps", "-axo", "comm="],
+            capture_output=True,
+            text=True,
+        )
+        process_names = [
+            Path(line.strip()).name.lower()
+            for line in result.stdout.splitlines()
+            if line.strip()
+        ]
+        return any(name in {"darktable", "darktable.exe"} for name in process_names)
+    except OSError as exc:
+        _log.debug("Failed to inspect running processes: %s", exc)
+        return False
+
+
+def prompt_to_close_darktable(logger: logging.Logger) -> None:
+    """Prompt the user to close darktable before using CLI-import mode."""
+    if not is_darktable_running():
+        return
+
+    warning = (
+        "darktable appears to be running. Close the darktable app before "
+        "continuing with CLI-import mode."
+    )
+
+    if not sys.stdin.isatty():
+        logger.error("%s", warning)
+        sys.exit(1)
+
+    while True:
+        logger.warning("%s", warning)
+        try:
+            reply = input(
+                "Press Enter after closing darktable, or type 'q' to abort: "
+            ).strip().lower()
+        except EOFError:
+            logger.error("%s", warning)
+            sys.exit(1)
+
+        if reply in {"q", "quit", "exit", "abort"}:
+            logger.error("Aborted because darktable is still running.")
+            sys.exit(1)
+
+        if not is_darktable_running():
+            logger.info("darktable is no longer running; continuing.")
+            return
+
+
 # ---------------------------------------------------------------------------
 # Core logic
 # ---------------------------------------------------------------------------
@@ -533,6 +594,9 @@ class IngestGuard:
                 "darktable-cli executable not found: %s", self.darktable_cli
             )
             sys.exit(1)
+
+        if self.darktable_cli is not None and not self.dry_run:
+            prompt_to_close_darktable(self.log)
 
         source_files = self._collect_source_files()
         total = len(source_files)
